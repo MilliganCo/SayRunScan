@@ -71,16 +71,24 @@ class _ModeSelectorState extends State<_ModeSelector> {
     }
   }
 
+  void _openModeDialog() {
+    setState(() => mode = null);
+    WidgetsBinding.instance.addPostFrameCallback((_) => _chooseMode());
+  }
+
   @override
   Widget build(BuildContext context) {
     if (mode == null) return const SizedBox.shrink();
-    if (mode == AppMode.bags) return const BagListScreen();
-    return const BarcodePage();
+    if (mode == AppMode.bags) {
+      return BagListScreen(onModeChange: _openModeDialog);
+    }
+    return BarcodePage(onModeChange: _openModeDialog);
   }
 }
 
 class BarcodePage extends StatefulWidget {
-  const BarcodePage({Key? key}) : super(key: key);
+  final VoidCallback onModeChange;
+  const BarcodePage({Key? key, required this.onModeChange}) : super(key: key);
 
   @override
   _BarcodePageState createState() => _BarcodePageState();
@@ -167,6 +175,11 @@ class _BarcodePageState extends State<BarcodePage> {
         appBar: AppBar(
           title: const Text('Штрихкод Сканер'),
           actions: [
+            IconButton(
+              icon: const Icon(Icons.swap_horiz),
+              tooltip: 'Сменить режим',
+              onPressed: widget.onModeChange,
+            ),
             IconButton(
               icon: const Icon(Icons.camera_alt),
               tooltip: 'Сканер камеры',

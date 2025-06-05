@@ -6,11 +6,38 @@ import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 
 import '../bags_bloc.dart';
-import '../domain/entities.dart';
 import 'bag_scanner_screen.dart';
 
-class BagListScreen extends StatelessWidget {
-  const BagListScreen({super.key});
+class BagListScreen extends StatefulWidget {
+  final VoidCallback onModeChange;
+  const BagListScreen({super.key, required this.onModeChange});
+
+  @override
+  State<BagListScreen> createState() => _BagListScreenState();
+}
+
+class _BagListScreenState extends State<BagListScreen> {
+  static const _filePath =
+      r'\\194.32.248.34\Public\умные таблицы\АВТОПРИЕМКА\МАТРЕШКА К ПРИЕМКЕ\Матрешка 330738_ИП_Арутюнянц_FIRST .xlsx';
+
+  @override
+  void initState() {
+    super.initState();
+    Future.microtask(_loadDefaultFile);
+  }
+
+  Future<void> _loadDefaultFile() async {
+    final bloc = context.read<BagsBloc>();
+    try {
+      await bloc.loadFromFile(File(_filePath));
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Не удалось загрузить файл: $e')),
+        );
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -20,36 +47,9 @@ class BagListScreen extends StatelessWidget {
         title: const Text('Приёмка мешков'),
         actions: [
           IconButton(
-            icon: const Icon(Icons.upload_file),
-            onPressed: () async {
-              final controller = TextEditingController();
-              final path = await showDialog<String>(
-                context: context,
-                builder: (context) => AlertDialog(
-                  title: const Text('Путь к XLS-файлу'),
-                  content: TextField(
-                    controller: controller,
-                    decoration: const InputDecoration(hintText: '/path/file.xlsx'),
-                  ),
-                  actions: [
-                    TextButton(
-                      onPressed: () => Navigator.pop(context),
-                      child: const Text('Отмена'),
-                    ),
-                    TextButton(
-                      onPressed: () => Navigator.pop(context, controller.text),
-                      child: const Text('Загрузить'),
-                    ),
-                  ],
-                ),
-              );
-              if (path != null && path.isNotEmpty) {
-                final file = File(path);
-                if (await file.exists()) {
-                  await bloc.loadFromFile(file);
-                }
-              }
-            },
+            icon: const Icon(Icons.swap_horiz),
+            tooltip: 'Сменить режим',
+            onPressed: widget.onModeChange,
           ),
           IconButton(
             icon: const Icon(Icons.save_alt),
