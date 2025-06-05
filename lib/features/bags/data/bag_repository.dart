@@ -1,4 +1,6 @@
 import 'dart:io';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 import 'package:excel/excel.dart';
 import '../domain/entities.dart';
 
@@ -21,5 +23,17 @@ class BagRepository {
       bag.items.add(BagItem(article: article, title: title, czPrefix: cz));
     }
     return map.values.toList();
+  }
+
+  Future<List<Bag>> fetchFromServer(Uri uri, {String? authToken}) async {
+    final response = await http.get(uri,
+        headers: {if (authToken != null) 'Authorization': authToken});
+    if (response.statusCode != 200) {
+      throw HttpException('Failed to load bags: ${response.statusCode}');
+    }
+    final List data = json.decode(response.body) as List;
+    return data
+        .map((e) => Bag.fromJson(e as Map<String, dynamic>))
+        .toList();
   }
 }

@@ -17,8 +17,8 @@ class BagListScreen extends StatefulWidget {
 }
 
 class _BagListScreenState extends State<BagListScreen> {
-  static const _filePath =
-      r'\\194.32.248.34\Public\умные таблицы\АВТОПРИЕМКА\МАТРЕШКА К ПРИЕМКЕ\Матрешка 330738_ИП_Арутюнянц_FIRST .xlsx';
+  static const _endpoint = 'http://194.32.248.34:51000/bags';
+  static const _authHeader = 'HvkhvUVUhvuvuYVUKvukyV';
 
   @override
   void initState() {
@@ -29,7 +29,7 @@ class _BagListScreenState extends State<BagListScreen> {
   Future<void> _loadDefaultFile() async {
     final bloc = context.read<BagsBloc>();
     try {
-      await bloc.loadFromFile(File(_filePath));
+      await bloc.loadFromServer(Uri.parse(_endpoint), authToken: _authHeader);
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

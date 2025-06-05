@@ -17,6 +17,15 @@ class BagsBloc extends ChangeNotifier {
     }
   }
 
+  Future<void> loadFromServer(Uri uri, {String? authToken}) async {
+    try {
+      bags = await repo.fetchFromServer(uri, authToken: authToken);
+      notifyListeners();
+    } catch (_) {
+      rethrow;
+    }
+  }
+
   void markScanned(String code) {
     for (final bag in bags) {
       if (bag.sscc == code || bag.czPrefixes.contains(code)) {
