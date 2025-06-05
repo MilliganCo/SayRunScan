@@ -2,6 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'dart:convert';
+import 'package:provider/provider.dart';
+
+import 'features/bags/bags_bloc.dart';
+import 'features/bags/data/bag_repository.dart';
+import 'features/bags/presentation/bag_list_screen.dart';
 
 void main() {
   runApp(const MyApp());
@@ -12,13 +17,65 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Barcode Lookup',
-      theme: ThemeData(
-        primarySwatch: Colors.grey,
+    return ChangeNotifierProvider(
+      create: (_) => BagsBloc(BagRepository()),
+      child: MaterialApp(
+        title: 'Barcode Lookup',
+        theme: ThemeData(
+          primarySwatch: Colors.grey,
+        ),
+        home: const _ModeSelector(),
       ),
-      home: const BarcodePage(),
     );
+  }
+}
+
+enum AppMode { sales, bags }
+
+class _ModeSelector extends StatefulWidget {
+  const _ModeSelector();
+
+  @override
+  State<_ModeSelector> createState() => _ModeSelectorState();
+}
+
+class _ModeSelectorState extends State<_ModeSelector> {
+  AppMode? mode;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _chooseMode());
+  }
+
+  Future<void> _chooseMode() async {
+    final selected = await showDialog<AppMode>(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        title: const Text('Выберите режим'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, AppMode.sales),
+            child: const Text('Продажи'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, AppMode.bags),
+            child: const Text('Приёмка'),
+          ),
+        ],
+      ),
+    );
+    if (selected != null) {
+      setState(() => mode = selected);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (mode == null) return const SizedBox.shrink();
+    if (mode == AppMode.bags) return const BagListScreen();
+    return const BarcodePage();
   }
 }
 

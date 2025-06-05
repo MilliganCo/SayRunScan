@@ -14,3 +14,12 @@ A few resources to get you started if this is your first Flutter project:
 For help getting started with Flutter development, view the
 [online documentation](https://docs.flutter.dev/), which offers tutorials,
 samples, guidance on mobile development, and a full API reference.
+
+## Приёмка мешков
+
+1. Запустите приложение и выберите режим **Приёмка**.
+2. Нажмите кнопку загрузки в правом верхнем углу и укажите файл `*.xls*` со списком мешков.
+3. Список мешков появится на экране. Для отметки сканируйте SSCC или DataMatrix коды.
+4. Через меню экспорта можно сохранить результат проверки в CSV.
+
+Создайте тестовый XLS-файл со столбцами, как описано выше, чтобы попробовать функциональность.
