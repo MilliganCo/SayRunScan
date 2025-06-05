@@ -47,7 +47,9 @@ class _BarcodePageState extends State<BarcodePage> {
     });
   }
 
-  // ---------------- NETWORK ----------------
+  /* ------------------------------------------------------------------
+   *  NETWORK
+   * ----------------------------------------------------------------*/
   Future<void> _onSubmitted(String code) async {
     final uri = Uri.parse(_endpoint).replace(queryParameters: {'code': code});
     try {
@@ -77,8 +79,9 @@ class _BarcodePageState extends State<BarcodePage> {
         final jsonBody = json.decode(response.body) as Map<String, dynamic>;
         final time = jsonBody['time'] ?? 'unknown';
         if (!mounted) return;
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text('Data refreshed at $time')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Data refreshed at $time')),
+        );
       } else {
         _showSnack('Refresh failed: ${response.statusCode}');
       }
@@ -87,10 +90,11 @@ class _BarcodePageState extends State<BarcodePage> {
     }
   }
 
-  void _showSnack(String msg) =>
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+  void _showSnack(String msg) => ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
 
-  // ---------------- CAMERA SCANNER ----------------
+  /* ------------------------------------------------------------------
+   *  CAMERA SCANNER
+   * ----------------------------------------------------------------*/
   Future<void> _openCameraScanner() async {
     final scanned = await Navigator.push<String>(
       context,
@@ -101,72 +105,71 @@ class _BarcodePageState extends State<BarcodePage> {
     }
   }
 
-  // ---------------- UI ----------------
+  /* ------------------------------------------------------------------
+   *  UI
+   * ----------------------------------------------------------------*/
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onDoubleTap: _openCameraScanner,
-      child: Scaffold(
-        appBar: AppBar(
-          title: const Text('Штрихкод Сканер'),
-          actions: [
-            IconButton(
-              icon: const Icon(Icons.camera_alt),
-              tooltip: 'Сканер камеры',
-              onPressed: _openCameraScanner,
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Штрихкод Сканер'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.camera_alt),
+            tooltip: 'Сканер камеры',
+            onPressed: _openCameraScanner,
+          ),
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            onPressed: _onRefresh,
+            tooltip: 'Обновить данные',
+          ),
+        ],
+      ),
+      body: Padding(
+        padding: const EdgeInsets.fromLTRB(16.0, 32.0, 16.0, 16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            if (_productName.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 16.0),
+                child: Text(
+                  _productName,
+                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                ),
+              ),
+            TextField(
+              controller: _controller,
+              focusNode: _focusNode,
+              decoration: const InputDecoration(
+                labelText: 'Сканируйте штрихкод',
+                border: OutlineInputBorder(),
+              ),
+              textInputAction: TextInputAction.done,
+              onSubmitted: _onSubmitted,
             ),
-            IconButton(
-              icon: const Icon(Icons.refresh),
-              onPressed: _onRefresh,
-              tooltip: 'Обновить данные',
+            const SizedBox(height: 8),
+            Expanded(
+              child: GridView(
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 2,
+                  crossAxisSpacing: 5,
+                  mainAxisSpacing: 4,
+                  childAspectRatio: 1.2,
+                ),
+                children: [
+                  _buildCard('Остатки на складе', _data['wh'], Colors.green),
+                  _buildCard('Заказы WB вчера', _data['wb_yes'], const Color.fromARGB(255, 125, 24, 150)),
+                  _buildCard('Остатки WB', _data['wb'], const Color.fromARGB(255, 199, 34, 111)),
+                  _buildCard('Заказы WB неделя', _data['wb_week'], const Color.fromARGB(255, 212, 120, 255)),
+                  _buildCard('Остатки Ozon', _data['ozon'], Colors.blue),
+                  _buildCard('Заказы Ozon неделя', _data['ozon_week'], Colors.indigo),
+                  _buildCard('Остатки дней WB', _calculateWBDays(), const Color.fromARGB(255, 247, 121, 190)),
+                ],
+              ),
             ),
           ],
-        ),
-        body: Padding(
-          padding: const EdgeInsets.fromLTRB(16.0, 32.0, 16.0, 16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              if (_productName.isNotEmpty)
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 16.0),
-                  child: Text(
-                    _productName,
-                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                  ),
-                ),
-              TextField(
-                controller: _controller,
-                focusNode: _focusNode,
-                decoration: const InputDecoration(
-                  labelText: 'Сканируйте штрихкод',
-                  border: OutlineInputBorder(),
-                ),
-                textInputAction: TextInputAction.done,
-                onSubmitted: _onSubmitted,
-              ),
-              const SizedBox(height: 8),
-              Expanded(
-                child: GridView(
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 2,
-                    crossAxisSpacing: 5,
-                    mainAxisSpacing: 4,
-                    childAspectRatio: 1.2,
-                  ),
-                  children: [
-                    _buildCard('Остатки на складе', _data['wh'], Colors.green),
-                    _buildCard('Заказы WB вчера', _data['wb_yes'], const Color.fromARGB(255, 125, 24, 150)),
-                    _buildCard('Остатки WB', _data['wb'], const Color.fromARGB(255, 199, 34, 111)),
-                    _buildCard('Заказы WB неделя', _data['wb_week'], const Color.fromARGB(255, 212, 120, 255)),
-                    _buildCard('Остатки Ozon', _data['ozon'], Colors.blue),
-                    _buildCard('Заказы Ozon неделя', _data['ozon_week'], Colors.indigo),
-                    _buildCard('Остатки дней WB', _calculateWBDays(), const Color.fromARGB(255, 247, 121, 190)),
-                  ],
-                ),
-              ),
-            ],
-          ),
         ),
       ),
     );
@@ -174,11 +177,11 @@ class _BarcodePageState extends State<BarcodePage> {
 
   String _calculateWBDays() {
     final wb = (_data['wb'] ?? 0) as num;
-    final supply = (_data['wb_supply'] ?? 0) as num;
+    final week = (_data['wb_week'] ?? 0) as num;
     final yesterday = (_data['wb_yes'] ?? 0) as num;
-    final totalStock = wb + supply;
-    if (yesterday == 0) return '-';
-    return (totalStock / yesterday).toStringAsFixed(1);
+    final sales = week + yesterday;
+    if (sales == 0) return '-';
+    return (wb * 8 / sales).toStringAsFixed(1);
   }
 
   Widget _buildCard(String title, dynamic value, Color color) {
@@ -206,9 +209,9 @@ class _BarcodePageState extends State<BarcodePage> {
   }
 }
 
-// ------------------------------------------------------------------
-// FULL‑SCREEN CAMERA SCANNER
-// ------------------------------------------------------------------
+/* ------------------------------------------------------------------
+ *  FULL‑SCREEN CAMERA SCANNER
+ * ----------------------------------------------------------------*/
 class _ScanScreen extends StatefulWidget {
   const _ScanScreen({Key? key}) : super(key: key);
 
@@ -238,7 +241,11 @@ class _ScanScreenState extends State<_ScanScreen> {
             top: 50,
             right: 20,
             child: IconButton(
-              icon: Icon(_torchOn ? Icons.flash_on : Icons.flash_off, color: Colors.white, size: 32),
+              icon: Icon(
+                _torchOn ? Icons.flash_on : Icons.flash_off,
+                color: Colors.white,
+                size: 32,
+              ),
               onPressed: () {
                 MobileScannerController().toggleTorch();
                 setState(() => _torchOn = !_torchOn);
