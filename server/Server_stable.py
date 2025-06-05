@@ -20,6 +20,7 @@ WB_JSON_PATH  = r"\\194.32.248.34\Shared\wb_stocks_new.json"
 OZON_META_PATH= r"\\194.32.248.34\Shared\ozon_stocks_path.json"
 ONE_C_DIR     = r"\\194.32.248.34\Shared\1C"
 AUTH_TOKEN    = "HvkhvUVUhvuvuYVUKvukyV"
+BAGS_FILE_PATH = r"\\194.32.248.34\Public\умные таблицы\АВТОПРИЕМКА\МАТРЕШКА К ПРИЕМКЕ\Матрешка 330738_ИП_Арутюнянц_FIRST .xlsx"
 
 
 
@@ -119,6 +120,27 @@ def _load_wb_supply_cache() -> dict[str,int]:
                 
         wb.close()
     return data
+
+
+def _load_bags() -> list[dict]:
+    """Парсит Excel с мешками для приёмки."""
+    with open(BAGS_FILE_PATH, "rb") as f:
+        wb = load_workbook(io.BytesIO(f.read()), read_only=True, data_only=True)
+    ws = wb.active
+    bags: dict[str, dict] = {}
+    for row in ws.iter_rows(min_row=2, values_only=True):
+        cz = str(row[0]).strip() if row[0] else ""
+        sscc = str(row[1]).strip() if row[1] else ""
+        article = str(row[5]).strip() if row[5] else ""
+        title = str(row[6]).strip() if row[6] else ""
+        if not sscc:
+            continue
+        b = bags.setdefault(sscc, {"sscc": sscc, "czPrefixes": [], "items": [], "scanned": False})
+        if cz:
+            b["czPrefixes"].append(cz[:31])
+        b["items"].append({"article": article, "title": title, "czPrefix": cz})
+    wb.close()
+    return list(bags.values())
 
 # ------------- sql‑helpers -------------
 
@@ -222,6 +244,17 @@ def barcode_lookup():
         'wb_supply' : wb_supply_cache.get(code, 0)  # Добавляем данные о поставках
     }
     return jsonify(res)
+
+
+@app.route('/bags')
+@require_auth
+def bags():
+    try:
+        data = _load_bags()
+        return jsonify(data)
+    except Exception as e:
+        app.logger.exception("bags failed: %s", e)
+        return jsonify({'error': 'failed to load bags'}), 500
 
 
 @app.route('/refresh', methods=['POST'])
