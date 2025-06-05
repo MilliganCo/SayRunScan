@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:path_provider/path_provider.dart';
+
 import 'package:provider/provider.dart';
 
 import '../bags_bloc.dart';
@@ -56,12 +57,14 @@ class BagListScreen extends StatelessWidget {
               final csv = bloc.bags
                   .map((b) => '${b.sscc},${b.scanned},${DateTime.now()}')
                   .join('\n');
+              
               final dir = await getApplicationDocumentsDirectory();
               final f = File('${dir.path}/BagChecks_${DateTime.now().millisecondsSinceEpoch}.csv');
               await f.writeAsString(csv);
               if (context.mounted) {
                 ScaffoldMessenger.of(context)
                     .showSnackBar(const SnackBar(content: Text('Экспорт завершен')));
+
               }
             },
           )
