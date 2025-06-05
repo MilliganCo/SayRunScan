@@ -21,6 +21,8 @@ OZON_META_PATH= r"\\194.32.248.34\Shared\ozon_stocks_path.json"
 ONE_C_DIR     = r"\\194.32.248.34\Shared\1C"
 AUTH_TOKEN    = "HvkhvUVUhvuvuYVUKvukyV"
 
+
+
 with open(DB_CFG_PATH, encoding="utf-8") as f:
     DB = json.load(f)
 
