@@ -9,8 +9,12 @@ class BagsBloc extends ChangeNotifier {
   BagsBloc(this.repo);
 
   Future<void> loadFromFile(File file) async {
-    bags = await repo.parseFile(file);
-    notifyListeners();
+    try {
+      bags = await repo.parseFile(file);
+      notifyListeners();
+    } catch (_) {
+      rethrow;
+    }
   }
 
   void markScanned(String code) {
